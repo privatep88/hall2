@@ -96,7 +96,7 @@ export const ScheduleTable: React.FC<ScheduleTableProps> = ({ days, timeSlots, b
             </thead>
             <tbody>
                 {days.map((day, index) => {
-                    const isWeekend = day.getDay() === 5 || day.getDay() === 6; // Friday or Saturday
+                    const isWeekend = day.getDay() === 0 || day.getDay() === 6; // Sunday or Saturday
                     const dayHeaderClasses = `border border-gray-200 font-semibold align-middle ${isWeekend ? 'text-amber-900' : 'bg-blue-100 text-blue-900'}`;
                     const dayHeaderMonoClasses = `border border-gray-200 font-mono align-middle ${isWeekend ? 'text-amber-900' : 'bg-blue-100 text-blue-900'}`;
 

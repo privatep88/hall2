@@ -8,41 +8,49 @@ import { Booking, Hall } from './types';
 import { getDaysInMonth, formatToYYYYMMDD, formatDateDisplay } from './utils/dateUtils';
 import { LocationIcon, PhoneIcon, EmailIcon, HomeIcon } from './components/icons';
 
-// Mock initial data
-const initialBookings: Booking[] = [
-    {
-        id: '1',
-        hallId: Hall.AlWaha,
-        date: '2026-01-05',
-        time: '09:00',
-        endTime: '11:00',
-        department: 'إدارة شؤون الطلاب',
-        notes: 'اجتماع دوري'
-    },
-    {
-        id: '2',
-        hallId: Hall.AlWaha,
-        date: '2026-01-05',
-        time: '11:00',
-        endTime: '12:00',
-        department: 'إدارة شؤون الطلاب',
-        notes: 'اجتماع دوري'
-    },
-    {
-        id: '3',
-        hallId: Hall.AlDana,
-        date: '2026-01-08',
-        time: '11:00',
-        endTime: '13:00',
-        department: 'قسم التسويق',
-        notes: 'ورشة عمل'
-    }
-];
+// Function to generate dynamic initial bookings for the current month
+const generateInitialBookings = (): Booking[] => {
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+    const dayAfter = new Date();
+    dayAfter.setDate(today.getDate() + 2);
+
+    return [
+        {
+            id: '1',
+            hallId: Hall.AlWaha,
+            date: formatToYYYYMMDD(today),
+            time: '09:00',
+            endTime: '11:00',
+            department: 'قسم الموارد البشرية',
+            notes: 'مقابلات توظيف'
+        },
+        {
+            id: '2',
+            hallId: Hall.AlWaha,
+            date: formatToYYYYMMDD(tomorrow),
+            time: '11:00',
+            endTime: '12:00',
+            department: 'قسم تكنولوجيا المعلومات',
+            notes: 'اجتماع فريق الدعم'
+        },
+        {
+            id: '3',
+            hallId: Hall.AlDana,
+            date: formatToYYYYMMDD(dayAfter),
+            time: '14:00',
+            endTime: '16:00',
+            department: 'قسم التسويق',
+            notes: 'ورشة عمل عن الحملات الإعلانية'
+        }
+    ];
+};
 
 const App: React.FC = () => {
     const [selectedHall, setSelectedHall] = useState<Hall>(Hall.AlWaha);
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [bookings, setBookings] = useState<Booking[]>(initialBookings);
+    const [bookings, setBookings] = useState<Booking[]>(generateInitialBookings());
 
     const [modalInfo, setModalInfo] = useState<{
         isOpen: boolean;
@@ -311,7 +319,7 @@ const App: React.FC = () => {
         // Apply styles to all data cells
         for (let R = 4; R < sheetData.length; ++R) {
             const day = daysInMonth[R-4];
-            const isWeekend = day.getDay() === 5 || day.getDay() === 6;
+            const isWeekend = day.getDay() === 0 || day.getDay() === 6; // Sunday or Saturday
 
             for (let C = 0; C < headerRow2.length; ++C) {
                 const cellAddress = XLSX.utils.encode_cell({r: R, c: C});
@@ -335,13 +343,13 @@ const App: React.FC = () => {
         <div className="p-4 md:p-8 min-h-screen">
             <header className="mb-6">
                 <div className="bg-slate-900 py-4 px-6 rounded-lg shadow-lg relative">
-                    <div className="absolute top-1/2 -translate-y-1/2 right-6">
+                    <div className="absolute top-1/2 -translate-y-1/2 right-6 hidden md:flex">
                         <a href="https://dashboard-rouge-rho-68.vercel.app/" className="flex items-center gap-2 px-4 py-2 text-white text-lg font-semibold rounded-lg bg-blue-800 shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-blue-500 transition-all duration-200">
                             <HomeIcon className="w-6 h-6" />
                             <span>الصفحة الرئيسية</span>
                         </a>
                     </div>
-                     <div className="absolute top-1/2 -translate-y-1/2 left-6">
+                     <div className="absolute top-1/2 -translate-y-1/2 left-6 hidden md:flex">
                         <a href="mailto:Logistic@saher.ae" className="flex items-center gap-2 px-4 py-2 text-white text-lg font-semibold rounded-lg bg-blue-800 shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-blue-500 transition-all duration-200">
                             <EmailIcon className="w-6 h-6" />
                             <span>تواصل معنا</span>
@@ -452,9 +460,9 @@ const App: React.FC = () => {
                         <div className="md:col-span-1">
                             <h3 className="text-lg font-bold text-white mb-4 inline-block pb-1 border-b-2 border-yellow-400">روابط سريعة</h3>
                             <ul className="space-y-2 text-sm">
-                                <li><a href="#" className="hover:text-white transition-colors">الرئيسية</a></li>
-                                <li><a href="#" className="hover:text-white transition-colors">خدماتنا</a></li>
-                                <li><a href="#" className="hover:text-white transition-colors">تواصل معنا</a></li>
+                                <li><a href="#!" className="hover:text-white transition-colors">الرئيسية</a></li>
+                                <li><a href="#!" className="hover:text-white transition-colors">خدماتنا</a></li>
+                                <li><a href="#!" className="hover:text-white transition-colors">تواصل معنا</a></li>
                             </ul>
                         </div>
 
