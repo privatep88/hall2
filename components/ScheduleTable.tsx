@@ -11,6 +11,20 @@ interface ScheduleTableProps {
     onBookingClick: (bookingId: string) => void;
 }
 
+const EmptyCell: React.FC<{ date: Date; time: string; onClick: () => void }> = ({ date, time, onClick }) => {
+    const formattedDate = formatToYYYYMMDD(date);
+    return (
+        <td
+            className="relative group border border-gray-200 h-12 hover:bg-blue-100 cursor-pointer transition-colors"
+            onClick={onClick}
+        >
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block px-2 py-1 bg-gray-900 text-gray-200 text-xs rounded-md shadow-lg whitespace-nowrap z-10">
+                {`${formattedDate} - ${time}`}
+            </div>
+        </td>
+    );
+};
+
 export const ScheduleTable: React.FC<ScheduleTableProps> = ({ days, timeSlots, bookings, onCellClick, onBookingClick }) => {
     
     const bookingColors = [
@@ -63,32 +77,32 @@ export const ScheduleTable: React.FC<ScheduleTableProps> = ({ days, timeSlots, b
 
     return (
         <table className="min-w-full border-collapse text-center">
-            <thead className="bg-blue-950 text-sm font-bold text-white sticky top-0">
+            <thead className="bg-slate-900 text-sm font-bold text-white sticky top-0">
                 <tr>
-                    <th colSpan={3} className="py-2 border border-blue-800"></th>
-                    <th colSpan={displayTimeSlots.length + 1} className="py-2 border border-blue-800">
+                    <th colSpan={3} className="py-2 border border-slate-700"></th>
+                    <th colSpan={displayTimeSlots.length + 1} className="py-2 border border-slate-700">
                         من / الى
                     </th>
                 </tr>
                 <tr>
-                    <th className="py-3 px-2 border border-blue-800 w-12">م</th>
-                    <th className="py-3 px-2 border border-blue-800 w-28">اليوم</th>
-                    <th className="py-3 px-2 border border-blue-800 w-32">التاريخ</th>
+                    <th className="py-3 px-2 border border-slate-700 w-12">م</th>
+                    <th className="py-3 px-2 border border-slate-700 w-28">اليوم</th>
+                    <th className="py-3 px-2 border border-slate-700 w-32">التاريخ</th>
                     {displayTimeSlots.map(time => (
-                        <th key={time} className="py-3 px-2 border border-blue-800 w-24">{time}</th>
+                        <th key={time} className="py-3 px-2 border border-slate-700 w-24">{time}</th>
                     ))}
-                    <th className="py-3 px-2 border border-blue-800 w-48">الملاحظات</th>
+                    <th className="py-3 px-2 border border-slate-700 w-48">الملاحظات</th>
                 </tr>
             </thead>
             <tbody>
                 {days.map((day, index) => {
-                    const isWeekend = day.getDay() === 0 || day.getDay() === 6; // Sunday or Saturday
+                    const isWeekend = day.getDay() === 5 || day.getDay() === 6; // Friday or Saturday
                     const dayHeaderClasses = `border border-gray-200 font-semibold align-middle ${isWeekend ? 'text-amber-900' : 'bg-blue-100 text-blue-900'}`;
                     const dayHeaderMonoClasses = `border border-gray-200 font-mono align-middle ${isWeekend ? 'text-amber-900' : 'bg-blue-100 text-blue-900'}`;
 
                     const formattedDate = formatToYYYYMMDD(day);
                     const allDayBookings = bookingsByDate[formattedDate] || [];
-                    const notes = allDayBookings.map(b => b.notes).filter(Boolean).join(', ');
+                    const notes = allDayBookings.map(b => b.notes).filter(Boolean).join('، ');
 
                     return (
                         <tr key={day.toISOString()} className={`text-sm ${isWeekend ? 'bg-amber-50' : 'bg-white'}`}>
@@ -120,33 +134,11 @@ export const ScheduleTable: React.FC<ScheduleTableProps> = ({ days, timeSlots, b
                                             );
                                             i += span;
                                         } else {
-                                            // Invalid booking (e.g. endTime <= startTime), render an empty cell and move to the next
-                                            cells.push(
-                                                <td
-                                                    key={time}
-                                                    className="relative group border border-gray-200 h-12 hover:bg-blue-100 cursor-pointer transition-colors"
-                                                    onClick={() => onCellClick(day, time)}
-                                                >
-                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block px-2 py-1 bg-gray-900 text-gray-200 text-xs rounded-md shadow-lg whitespace-nowrap z-10">
-                                                        {`${formattedDate} - ${time}`}
-                                                    </div>
-                                                </td>
-                                            );
+                                            cells.push(<EmptyCell key={time} date={day} time={time} onClick={() => onCellClick(day, time)} />);
                                             i++;
                                         }
                                     } else {
-                                        // No booking starts here, this cell must be empty.
-                                        cells.push(
-                                            <td
-                                                key={time}
-                                                className="relative group border border-gray-200 h-12 hover:bg-blue-100 cursor-pointer transition-colors"
-                                                onClick={() => onCellClick(day, time)}
-                                            >
-                                                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block px-2 py-1 bg-gray-900 text-gray-200 text-xs rounded-md shadow-lg whitespace-nowrap z-10">
-                                                    {`${formattedDate} - ${time}`}
-                                                </div>
-                                            </td>
-                                        );
+                                        cells.push(<EmptyCell key={time} date={day} time={time} onClick={() => onCellClick(day, time)} />);
                                         i++;
                                     }
                                 }

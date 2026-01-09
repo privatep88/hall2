@@ -1,7 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Booking } from '../types';
 import { CloseIcon } from './icons';
+import { formatDateDisplay } from '../utils/dateUtils';
+
 
 interface BookingModalProps {
     isOpen: boolean;
@@ -19,18 +21,32 @@ interface BookingModalProps {
     };
 }
 
+const parseDateString = (dateStr: string): Date => {
+    const parts = dateStr.split('-');
+    // new Date(year, monthIndex, day)
+    return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+};
+
 export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSave, onDelete, hallName, initialData, timeSlots }) => {
     const [department, setDepartment] = useState('');
     const [endTime, setEndTime] = useState('');
     const [notes, setNotes] = useState('');
     const [error, setError] = useState('');
+    const departmentInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
+        if (isOpen) {
+            // Autofocus on the department input when the modal opens
+            setTimeout(() => {
+                departmentInputRef.current?.focus();
+            }, 100);
+        }
+        // Reset state when modal opens or initial data changes
         setDepartment(initialData.department || '');
         setNotes(initialData.notes || '');
         setEndTime(initialData.endTime || '');
-        setError(''); // Reset error when modal opens or initial data changes
-    }, [initialData]);
+        setError('');
+    }, [isOpen, initialData]);
 
     if (!isOpen) return null;
 
@@ -47,7 +63,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
                 throw new Error('وقت الانتهاء يجب أن يكون بعد وقت البدء.');
             }
             
-            // This call might also throw, e.g., on conflict from the parent component
             onSave({
                 date: initialData.date,
                 time: initialData.time,
@@ -63,7 +78,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
     const startTimeIndex = timeSlots.indexOf(initialData.time);
     const availableEndTimes = startTimeIndex !== -1 ? timeSlots.slice(startTimeIndex + 1) : [];
 
-    const displayDate = initialData.date.split('-').reverse().join('/');
+    const displayDate = formatDateDisplay(parseDateString(initialData.date));
 
     return (
         <div 
@@ -102,6 +117,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onS
                             الإدارة الطالبة
                         </label>
                         <input
+                            ref={departmentInputRef}
                             id="department"
                             type="text"
                             value={department}

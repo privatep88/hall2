@@ -41,7 +41,7 @@ const initialBookings: Booking[] = [
 
 const App: React.FC = () => {
     const [selectedHall, setSelectedHall] = useState<Hall>(Hall.AlWaha);
-    const [currentDate, setCurrentDate] = useState(new Date(2026, 0, 1));
+    const [currentDate, setCurrentDate] = useState(new Date());
     const [bookings, setBookings] = useState<Booking[]>(initialBookings);
 
     const [modalInfo, setModalInfo] = useState<{
@@ -177,7 +177,9 @@ const App: React.FC = () => {
     
     const modalInitialData = getModalInitialData();
 
-    const yearsForSelect = Array.from({ length: 2050 - 2024 + 1 }, (_, i) => 2024 + i);
+    const currentYear = new Date().getFullYear();
+    const yearsForSelect = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
+    
     const months = [
         { value: 0, name: 'يناير' },
         { value: 1, name: 'فبراير' },
@@ -206,15 +208,13 @@ const App: React.FC = () => {
         
         const sheetData: (string | number | null)[][] = [
             [title],
-            [], // Spacer row
+            [],
             headerRow1,
             headerRow2,
         ];
     
         const merges: XLSX.Range[] = [
-            // Title merge
             { s: { r: 0, c: 0 }, e: { r: 0, c: headerRow2.length - 1 } },
-            // Sub-header 'من / الى' merge
             { s: { r: 2, c: 3 }, e: { r: 2, c: 3 + displayTimeSlots.length - 1 } },
         ];
     
@@ -234,7 +234,7 @@ const App: React.FC = () => {
             const rowIndex = sheetData.length;
             const formattedDate = formatToYYYYMMDD(day);
             const dayBookings = filteredBookings.filter(b => b.date === formattedDate);
-            const notes = dayBookings.map(b => b.notes).filter(Boolean).join(', ');
+            const notes = dayBookings.map(b => b.notes).filter(Boolean).join('، ');
     
             const row: (string | number | null)[] = [
                 index + 1,
@@ -276,19 +276,52 @@ const App: React.FC = () => {
     
         const ws = XLSX.utils.aoa_to_sheet(sheetData);
         ws['!merges'] = merges;
-        ws['!cols'] = [ {wch:5}, {wch:15}, {wch:15}, ...displayTimeSlots.map(() => ({wch: 12})), {wch: 35} ];
+        ws['!cols'] = [ {wch:5}, {wch:15}, {wch:15}, ...displayTimeSlots.map(() => ({wch: 15})), {wch: 40} ];
         ws['!rtl'] = true;
-    
-        // Add basic styling to headers
+
+        // --- Improved Styling ---
+        const thinBorder = { style: 'thin', color: { rgb: "FF000000" } };
+        const borderStyle = { top: thinBorder, bottom: thinBorder, left: thinBorder, right: thinBorder };
+        
+        const centerAlignment = { vertical: 'center', horizontal: 'center', wrapText: true };
+
         const headerStyle = {
-            font: { bold: true },
-            alignment: { horizontal: "center", vertical: "center" },
-            fill: { fgColor: { rgb: "FFD3D3D3" } } // Light Gray
+            font: { bold: true, color: { rgb: "FFFFFFFF" } },
+            alignment: centerAlignment,
+            fill: { fgColor: { rgb: "FF0F172A" } }, // slate-900
+            border: borderStyle,
         };
+
+        const titleStyle = {
+            font: { bold: true, sz: 16, color: { rgb: "FF0F172A" } },
+            alignment: centerAlignment,
+        };
+
+        const weekendFill = { fgColor: { rgb: "FFFBEB" } }; // amber-50
+
+        // Apply title style
+        ws['A1'].s = titleStyle;
+
+        // Apply header styles
         for (let C = 0; C < headerRow2.length; ++C) {
-            const cellAddress = XLSX.utils.encode_cell({r: 3, c: C});
-            if (ws[cellAddress]) {
-                ws[cellAddress].s = headerStyle;
+            ws[XLSX.utils.encode_cell({r: 2, c: C})].s = headerStyle;
+            ws[XLSX.utils.encode_cell({r: 3, c: C})].s = headerStyle;
+        }
+
+        // Apply styles to all data cells
+        for (let R = 4; R < sheetData.length; ++R) {
+            const day = daysInMonth[R-4];
+            const isWeekend = day.getDay() === 5 || day.getDay() === 6;
+
+            for (let C = 0; C < headerRow2.length; ++C) {
+                const cellAddress = XLSX.utils.encode_cell({r: R, c: C});
+                if (!ws[cellAddress]) ws[cellAddress] = { t:'s', v:'' }; // Create cell if it doesn't exist (for merged cells)
+
+                ws[cellAddress].s = {
+                    alignment: centerAlignment,
+                    border: borderStyle,
+                    fill: isWeekend ? weekendFill : undefined,
+                };
             }
         }
     
@@ -301,15 +334,15 @@ const App: React.FC = () => {
     return (
         <div className="p-4 md:p-8 min-h-screen">
             <header className="mb-6">
-                <div className="bg-blue-950 py-4 px-6 rounded-lg shadow-lg relative">
+                <div className="bg-slate-900 py-4 px-6 rounded-lg shadow-lg relative">
                     <div className="absolute top-1/2 -translate-y-1/2 right-6">
-                        <a href="https://dashboard-rouge-rho-68.vercel.app/" className="flex items-center gap-2 px-4 py-2 text-white text-lg font-semibold rounded-lg bg-blue-800 shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-950 focus:ring-blue-500 transition-all duration-200">
+                        <a href="https://dashboard-rouge-rho-68.vercel.app/" className="flex items-center gap-2 px-4 py-2 text-white text-lg font-semibold rounded-lg bg-blue-800 shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-blue-500 transition-all duration-200">
                             <HomeIcon className="w-6 h-6" />
                             <span>الصفحة الرئيسية</span>
                         </a>
                     </div>
                      <div className="absolute top-1/2 -translate-y-1/2 left-6">
-                        <a href="mailto:Logistic@saher.ae" className="flex items-center gap-2 px-4 py-2 text-white text-lg font-semibold rounded-lg bg-blue-800 shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-950 focus:ring-blue-500 transition-all duration-200">
+                        <a href="mailto:Logistic@saher.ae" className="flex items-center gap-2 px-4 py-2 text-white text-lg font-semibold rounded-lg bg-blue-800 shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-blue-500 transition-all duration-200">
                             <EmailIcon className="w-6 h-6" />
                             <span>تواصل معنا</span>
                         </a>
@@ -403,8 +436,8 @@ const App: React.FC = () => {
                 </div>
             </main>
 
-            <footer className="bg-blue-950 text-gray-200 mt-8 rounded-t-lg shadow-lg">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <footer className="bg-slate-900 text-gray-200 mt-8 rounded-t-lg shadow-lg">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-right">
 
                         {/* Column 1: About SAHER */}
@@ -446,8 +479,8 @@ const App: React.FC = () => {
                     </div>
 
                     {/* Bottom Bar */}
-                    <div className="border-t border-gray-700 mt-8 pt-6 flex flex-col sm:flex-row justify-between items-center text-sm">
-                        <p className="mb-4 sm:mb-0 text-gray-400">اعداد وتصميم / خالد الجفري</p>
+                    <div className="border-t border-gray-700 pt-4 mt-8 text-center text-sm">
+                        <p className="text-gray-400">اعداد وتصميم / خالد الجفري</p>
                         <p className="text-gray-400">© {new Date().getFullYear()} SAHER FOR SMART SERVICES</p>
                     </div>
                 </div>
